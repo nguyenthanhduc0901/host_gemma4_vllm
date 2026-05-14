@@ -39,6 +39,8 @@ env/
 .hf-home/
 models/
 cache/
+data/
+outputs/
 *.safetensors
 *.bin
 *.pt
