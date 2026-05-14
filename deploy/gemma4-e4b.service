@@ -1,0 +1,17 @@
+[Unit]
+Description=Gemma 4 E4B vLLM API Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/home/admin/host_gemma4
+ExecStart=/home/admin/host_gemma4/scripts/04_run_vllm_server.sh
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

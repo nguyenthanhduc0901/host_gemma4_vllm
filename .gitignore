@@ -38,10 +38,13 @@ env/
 # Hugging Face & Model files
 .hf-home/
 models/
+cache/
 *.safetensors
 *.bin
 *.pt
 *.pth
+*.gguf
+*.ggml
 
 # Environment variables
 .env
