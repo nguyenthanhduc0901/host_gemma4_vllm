@@ -1,16 +1,3 @@
-#!/usr/bin/env python3
-"""DebugEvalSuite quick compare: Gemma (vLLM) vs Gemini.
-
-This is the merged + minimal version (1 file only).
-
-Default behavior (mode=test):
-- Sample 10 examples per task for tasks 1/2/4 (seeded)
-- Print comparison tables with the key columns: gold / gemma / gemini
-- Write ONE JSON report with raw outputs from both models
-
-No streaming. No extra frameworks.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -27,7 +14,11 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 # ---- Defaults (edit these in-file if you want) ----
-DATA_PATH = "data/debugeval/debugevalsuite_task124.jsonl"
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_DIR = os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+_VENV_PY = os.path.join(_REPO_DIR, ".venv", "bin", "python")
+
+DATA_PATH = os.path.join(_REPO_DIR, "data", "debugeval", "debugevalsuite_task124.jsonl")
 TASKS = [1, 2, 4]
 LIMIT_PER_TASK = 10
 SEED = 123
@@ -41,8 +32,8 @@ GEMINI_MODEL = "gemini-2.5-flash"
 TEMPERATURE = 0.0
 MAX_OUTPUT_TOKENS = 32
 
-DOTENV_PATH = ".env"
-OUT_JSON = "outputs/debugeval_compare_test.json"
+DOTENV_PATH = os.path.join(_REPO_DIR, ".env")
+OUT_JSON = os.path.join(_REPO_DIR, "outputs", "debugeval_compare_test.json")
 
 
 _CHOICE_RE = re.compile(r"\(([ABCD])\)")
@@ -297,9 +288,12 @@ def _make_gemini_client():
     try:
         from google import genai
     except Exception as e:
-        hint = ""
-        if os.path.exists(".venv/bin/python"):
-            hint = "\nHint: run with: .venv/bin/python scripts/06_debugeval_vllm.py --mode test"
+        # If the repo has a venv, try to transparently re-run with it.
+        if os.path.exists(_VENV_PY) and os.environ.get("_DEBUEVAL_REEXEC") != "1" and os.path.abspath(sys.executable) != os.path.abspath(_VENV_PY):
+            os.environ["_DEBUEVAL_REEXEC"] = "1"
+            os.execv(_VENV_PY, [_VENV_PY, os.path.abspath(__file__), *sys.argv[1:]])
+
+        hint = f"\nHint: run with: {_VENV_PY} {os.path.abspath(__file__)} --mode test" if os.path.exists(_VENV_PY) else ""
         raise RuntimeError("google-genai is not installed for this Python. Install: python -m pip install -U google-genai" + hint) from e
 
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
